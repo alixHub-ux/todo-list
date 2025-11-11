@@ -6,6 +6,21 @@ import '../../utils/constants.dart';
 /// Data Access Object for Task table
 /// Handles all database operations related to tasks
 class TaskDao {
+  /// Get all tasks for a specific user
+  Future<List<Task>> getAllByUser(int userId) async {
+    try {
+      final db = await _dbHelper.database;
+      final maps = await db.query(
+        AppConstants.tableTasks,
+        where: '${AppConstants.columnTaskUserId} = ?',
+        whereArgs: [userId],
+      );
+      return maps.map((map) => Task.fromMap(map)).toList();
+    } catch (e) {
+      throw Exception('${AppConstants.erreurConnexionBD}: $e');
+    }
+  }
+
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   /// Insert a new task into the database
@@ -22,7 +37,6 @@ class TaskDao {
       throw Exception('${AppConstants.erreurConnexionBD}: $e');
     }
   }
-
 
   /// Get a task by ID
   /// Returns Task object if found, null otherwise
@@ -101,5 +115,4 @@ class TaskDao {
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
-
 }

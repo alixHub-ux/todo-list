@@ -45,15 +45,9 @@ class AppConstants {
 
   // ============ GRADIENTS ============
   static final LinearGradient primaryGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [primaryColor, primaryLightColor],
-  );
-
-  static final LinearGradient darkGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [primaryColor, primaryDarkColor],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [primaryColor, violetDarkColor],
   );
 
   // ============ BORDER RADIUS ============
@@ -114,24 +108,31 @@ class AppConstants {
   static const String vousNeDisposezPas = "Vous ne disposez pas d'un compte? ";
   static const String gestionnaireLyst = 'Gestionnaire Lyst';
   static const String tachesTotales = 'Tâches totales';
-  static const String debutezEnregistrement = "Débutez l'enregistrement d'une\nnouvelle tâche";
+  static const String debutezEnregistrement =
+      "Débutez l'enregistrement d'une\nnouvelle tâche";
   static const String modifierLaTache = 'Modifier la tâche';
   static const String nom = 'Nom';
   static const String date = 'Date';
   static const String enregistrer = 'Enregistrer';
   static const String modifier = 'Modifier';
   static const String faireLeMenage = 'Faire le ménage';
+  static const String faireLeMenuage = 'Faire le menuage';
 
   // ============ MESSAGES ============
   static const String erreurEmailVide = 'Veuillez entrer votre email';
   static const String erreurEmailInvalide = 'Veuillez entrer un email valide';
   static const String erreurMotDePasseVide = 'Veuillez entrer un mot de passe';
-  static const String erreurMotDePasseCourt = 'Le mot de passe doit contenir au moins 6 caractères';
-  static const String erreurMotDePasseNonCorrespondant = 'Les mots de passe ne correspondent pas';
+  static const String erreurMotDePasseCourt =
+      'Le mot de passe doit contenir au moins 6 caractères';
+  static const String erreurMotDePasseNonCorrespondant =
+      'Les mots de passe ne correspondent pas';
   static const String erreurEmailExiste = 'Cet email est déjà utilisé';
-  static const String erreurIdentifiantsIncorrects = 'Email ou mot de passe incorrect';
-  static const String erreurNomTacheVide = 'Veuillez entrer un nom pour la tâche';
-  static const String erreurConnexionBD = 'Erreur de connexion à la base de données';
+  static const String erreurIdentifiantsIncorrects =
+      'Email ou mot de passe incorrect';
+  static const String erreurNomTacheVide =
+      'Veuillez entrer un nom pour la tâche';
+  static const String erreurConnexionBD =
+      'Erreur de connexion à la base de données';
   static const String erreurInscription = "Erreur lors de l'inscription";
   static const String erreurConnexion = 'Erreur lors de la connexion';
 

@@ -1,19 +1,20 @@
 // lib/models/task_model.dart
 
-
 class Task {
-  int? id;              
-  String name;          
-  DateTime? dueDate;    
-  bool isCompleted;     
-  int? userId;          
+  int? id;
+  String name;
+  DateTime date;
+  bool isCompleted;
+  int? userId;
+  DateTime createdAt;
 
   Task({
     this.id,
     required this.name,
-    this.dueDate,
+    required this.date,
     this.isCompleted = false,
     this.userId,
+    required this.createdAt,
   });
 
   // Convert Task to Map for database storage
@@ -21,9 +22,10 @@ class Task {
     return {
       'id': id,
       'name': name,
-      'due_date': dueDate?.toIso8601String(),
+      'date': date.toIso8601String(),
       'is_completed': isCompleted ? 1 : 0,
       'user_id': userId,
+      'created_at': createdAt.toIso8601String(),
     };
   }
 
@@ -32,10 +34,10 @@ class Task {
     return Task(
       id: map['id'],
       name: map['name'],
-      dueDate:
-          map['due_date'] != null ? DateTime.parse(map['due_date']) : null,
+      date: DateTime.parse(map['date']),
       isCompleted: map['is_completed'] == 1,
       userId: map['user_id'],
+      createdAt: DateTime.parse(map['created_at']),
     );
   }
 
@@ -43,23 +45,23 @@ class Task {
   Task copyWith({
     int? id,
     String? name,
-    DateTime? dueDate,
+    DateTime? date,
     bool? isCompleted,
     int? userId,
+    DateTime? createdAt,
   }) {
     return Task(
       id: id ?? this.id,
       name: name ?? this.name,
-      dueDate: dueDate ?? this.dueDate,
+      date: date ?? this.date,
       isCompleted: isCompleted ?? this.isCompleted,
       userId: userId ?? this.userId,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
   @override
   String toString() {
-    return 'Task{id: $id, name: $name, dueDate: ${formatDate(dueDate)}, isCompleted: $isCompleted, userId: $userId}';
+    return 'Task{id: $id, name: $name, date: $date, isCompleted: $isCompleted, userId: $userId, createdAt: $createdAt}';
   }
-  
-  formatDate(DateTime? dueDate) {}
 }
