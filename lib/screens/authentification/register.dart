@@ -4,7 +4,7 @@ import '../../utils/validators.dart';
 import '../../database/user_database.dart';
 import '../../modele/user_model.dart';
 import 'login.dart';
-import '../taches/tache.dart';
+// unused import removed
 
 /// Registration screen for new users.
 /// Uses the same bottom-card visual as the login screen and keeps
