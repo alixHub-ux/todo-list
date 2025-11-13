@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:todo_app/screens/splash.dart';
+import 'package:lyst/screens/splash.dart';
 
 void main() {
   runApp(const MyApp());
