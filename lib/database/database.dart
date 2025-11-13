@@ -30,11 +30,23 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    // Open the database
+    // Open the database with upgrade support
     return await openDatabase(
       path,
       version: AppConstants.databaseVersion,
       onCreate: _createDB,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        // If upgrading from version 1 to 2, add description column to tasks
+        if (oldVersion < 2 && newVersion >= 2) {
+          try {
+            await db.execute(
+              'ALTER TABLE ${AppConstants.tableTasks} ADD COLUMN ${AppConstants.columnTaskDescription} TEXT DEFAULT ""',
+            );
+          } catch (e) {
+            // ignore if column already exists or other issues
+          }
+        }
+      },
     );
   }
 
@@ -57,6 +69,7 @@ class DatabaseHelper {
         ${AppConstants.columnTaskId} INTEGER PRIMARY KEY AUTOINCREMENT,
         ${AppConstants.columnTaskUserId} INTEGER NOT NULL,
         ${AppConstants.columnTaskName} TEXT NOT NULL,
+        ${AppConstants.columnTaskDescription} TEXT,
         ${AppConstants.columnTaskDate} INTEGER NOT NULL,
         ${AppConstants.columnTaskIsCompleted} INTEGER DEFAULT 0,
         ${AppConstants.columnTaskCreatedAt} INTEGER NOT NULL,

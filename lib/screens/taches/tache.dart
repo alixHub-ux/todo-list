@@ -6,6 +6,8 @@ import '../../database/task_database.dart';
 import '../../modele/task_model.dart';
 import '../authentification/login.dart';
 
+enum TaskFilter { all, completed, pending }
+
 /// Main task list screen
 /// Displays all tasks for the logged-in user with add/edit/delete functionality
 class TaskListScreen extends StatefulWidget {
@@ -21,6 +23,19 @@ class _TaskListScreenState extends State<TaskListScreen> {
   final TaskDao _taskDao = TaskDao();
   List<Task> _tasks = [];
   bool _isLoading = true;
+  TaskFilter _filter = TaskFilter.all;
+
+  List<Task> get _filteredTasks {
+    switch (_filter) {
+      case TaskFilter.completed:
+        return _tasks.where((t) => t.isCompleted).toList();
+      case TaskFilter.pending:
+        return _tasks.where((t) => !t.isCompleted).toList();
+      case TaskFilter.all:
+      default:
+        return _tasks;
+    }
+  }
 
   @override
   void initState() {
@@ -51,6 +66,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
   /// Show add task dialog
   void _showAddTaskDialog() {
     final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
     DateTime selectedDate = DateTime.now();
 
     showDialog(
@@ -60,140 +76,178 @@ class _TaskListScreenState extends State<TaskListScreen> {
           borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
         ),
         child: StatefulBuilder(
-          builder: (context, setDialogState) => Padding(
-            padding: const EdgeInsets.all(AppConstants.paddingLarge),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        AppConstants.debutezEnregistrement,
-                        style: TextStyle(fontSize: AppConstants.fontSizeMedium,fontWeight: AppConstants.fontWeightMedium),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(Icons.close, color: AppConstants.primaryColor),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppConstants.spacingL),
-
-                // Name field
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    hintText: AppConstants.nom,
-                    filled: true,
-                    fillColor: AppConstants.greyLightColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppConstants.borderRadiusSmall,
-                      ),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppConstants.spacingM),
-
-                // Date picker
-                InkWell(
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDate,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: AppConstants.primaryColor,
-                            ),
-                          ),
-                          child: child!,
-                        );
-                      },
-                    );
-                    if (date != null) {
-                      setDialogState(() {
-                        selectedDate = date;
-                      });
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(AppConstants.spacingM),
-                    decoration: BoxDecoration(
-                      color: AppConstants.greyLightColor,
-                      borderRadius: BorderRadius.circular(
-                        AppConstants.borderRadiusSmall,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          DateFormatter.formatDatePadded(selectedDate),
+          builder: (context, setDialogState) => SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(AppConstants.paddingLarge),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          AppConstants.debutezEnregistrement,
                           style: TextStyle(
                             fontSize: AppConstants.fontSizeMedium,
+                            fontWeight: AppConstants.fontWeightMedium,
                           ),
                         ),
-                        const Icon(Icons.calendar_today),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppConstants.spacingL),
-
-                // Save button
-                SizedBox(
-                  width: double.infinity,
-                  height: 45,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (nameController.text.isEmpty) {
-                        _showErrorSnackBar(AppConstants.erreurNomTacheVide);
-                        return;
-                      }
-
-                      final task = Task(
-                        userId: widget.userId,
-                        name: nameController.text,
-                        date: selectedDate,
-                        createdAt: DateTime.now(),
-                      );
-
-                      try {
-                        await _taskDao.insert(task);
-                        if (mounted && context.mounted) {
-                          Navigator.pop(context);
-                        }
-                        _loadTasks();
-                      } catch (e) {
-                        _showErrorSnackBar(
-                          e.toString().replaceAll('Exception: ', ''),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppConstants.primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppConstants.borderRadiusLarge,
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(
+                          Icons.close,
+                          color: AppConstants.primaryColor,
                         ),
                       ),
-                    ),
-                    child: Text(
-                      AppConstants.enregistrer,
-                      style: TextStyle(color: AppConstants.whiteColor),
+                    ],
+                  ),
+                  const SizedBox(height: AppConstants.spacingL),
+
+                  // Name field
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      hintText: AppConstants.nom,
+                      filled: true,
+                      fillColor: AppConstants.greyLightColor,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.borderRadiusSmall,
+                        ),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppConstants.spacingM),
+
+                  // Description field
+                  TextField(
+                    controller: descriptionController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      hintText: 'Description (optionnelle)',
+                      filled: true,
+                      fillColor: AppConstants.greyLightColor,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.borderRadiusSmall,
+                        ),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppConstants.spacingM),
+
+                  // Date picker
+                  InkWell(
+                    onTap: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: ColorScheme.light(
+                                primary: AppConstants.primaryColor,
+                              ),
+                            ),
+                            child: child!,
+                          );
+                        },
+                      );
+                      if (date != null) {
+                        setDialogState(() {
+                          selectedDate = date;
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(AppConstants.spacingM),
+                      decoration: BoxDecoration(
+                        color: AppConstants.greyLightColor,
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.borderRadiusSmall,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            DateFormatter.formatDatePadded(selectedDate),
+                            style: TextStyle(
+                              fontSize: AppConstants.fontSizeMedium,
+                            ),
+                          ),
+                          const Icon(Icons.calendar_today),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppConstants.spacingL),
+
+                  // Save button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 45,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (nameController.text.isEmpty) {
+                          _showErrorSnackBar(AppConstants.erreurNomTacheVide);
+                          return;
+                        }
+
+                        final task = Task(
+                          userId: widget.userId,
+                          name: nameController.text,
+                          description: descriptionController.text.isEmpty
+                              ? null
+                              : descriptionController.text,
+                          date: selectedDate,
+                          createdAt: DateTime.now(),
+                        );
+
+                        try {
+                          await _taskDao.insert(task);
+                          if (mounted) {
+                            Navigator.pop(context);
+                            _showSuccessSnackBar(AppConstants.tacheAjoutee);
+                          }
+                          _loadTasks();
+                        } catch (e) {
+                          _showErrorSnackBar(
+                            e.toString().replaceAll('Exception: ', ''),
+                          );
+                        }
+                      },
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(
+                          AppConstants.primaryColor,
+                        ),
+                        overlayColor: MaterialStateProperty.resolveWith(
+                          (states) =>
+                              AppConstants.primaryColor.withOpacity(0.12),
+                        ),
+                        shape: MaterialStateProperty.all(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppConstants.borderRadiusLarge,
+                            ),
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        AppConstants.enregistrer,
+                        style: TextStyle(color: AppConstants.whiteColor),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -204,6 +258,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
   /// Show edit task dialog
   void _showEditTaskDialog(Task task) {
     final nameController = TextEditingController(text: task.name);
+    final descriptionController = TextEditingController(
+      text: task.description ?? '',
+    );
     DateTime selectedDate = task.date;
 
     showDialog(
@@ -213,143 +270,178 @@ class _TaskListScreenState extends State<TaskListScreen> {
           borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
         ),
         child: StatefulBuilder(
-          builder: (context, setDialogState) => Padding(
-            padding: const EdgeInsets.all(AppConstants.paddingLarge),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      AppConstants.modifierLaTache,
-                      style: TextStyle(
-                        fontSize: AppConstants.fontSizeLarge,
-                        fontWeight: AppConstants.fontWeightMedium,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(Icons.close, color: AppConstants.primaryColor),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppConstants.spacingL),
-
-                // Name field
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    hintText: AppConstants.faireLeMenuage,
-                    filled: true,
-                    fillColor: AppConstants.greyLightColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppConstants.borderRadiusSmall,
-                      ),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppConstants.spacingM),
-
-                // Date picker
-                InkWell(
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDate,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: AppConstants.primaryColor,
-                            ),
-                          ),
-                          child: child!,
-                        );
-                      },
-                    );
-                    if (date != null) {
-                      setDialogState(() {
-                        selectedDate = date;
-                      });
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(AppConstants.spacingM),
-                    decoration: BoxDecoration(
-                      color: AppConstants.greyLightColor,
-                      borderRadius: BorderRadius.circular(
-                        AppConstants.borderRadiusSmall,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          DateFormatter.formatDatePadded(selectedDate),
-                          style: TextStyle(
-                            fontSize: AppConstants.fontSizeMedium,
-                          ),
+          builder: (context, setDialogState) => SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(AppConstants.paddingLarge),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        AppConstants.modifierLaTache,
+                        style: TextStyle(
+                          fontSize: AppConstants.fontSizeLarge,
+                          fontWeight: AppConstants.fontWeightMedium,
                         ),
-                        const Icon(Icons.calendar_today),
-                      ],
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(
+                          Icons.close,
+                          color: AppConstants.primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppConstants.spacingL),
+
+                  // Name field
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      hintText: AppConstants.faireLeMenuage,
+                      filled: true,
+                      fillColor: AppConstants.greyLightColor,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.borderRadiusSmall,
+                        ),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: AppConstants.spacingL),
+                  const SizedBox(height: AppConstants.spacingM),
 
-                // Update button
-                SizedBox(
-                  width: double.infinity,
-                  height: 45,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (nameController.text.isEmpty) {
-                        _showErrorSnackBar(AppConstants.erreurNomTacheVide);
-                        return;
-                      }
+                  // Description field
+                  TextField(
+                    controller: descriptionController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      hintText: 'Description (optionnelle)',
+                      filled: true,
+                      fillColor: AppConstants.greyLightColor,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.borderRadiusSmall,
+                        ),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppConstants.spacingM),
 
-                      final updatedTask = Task(
-                        id: task.id,
-                        userId: task.userId,
-                        name: nameController.text,
-                        date: selectedDate,
-                        isCompleted: task.isCompleted,
-                        createdAt: task.createdAt,
+                  // Date picker
+                  InkWell(
+                    onTap: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: ColorScheme.light(
+                                primary: AppConstants.primaryColor,
+                              ),
+                            ),
+                            child: child!,
+                          );
+                        },
                       );
-
-                      try {
-                        await _taskDao.update(updatedTask);
-                        if (mounted && context.mounted) {
-                          Navigator.pop(context);
-                        }
-                        _loadTasks();
-                      } catch (e) {
-                        _showErrorSnackBar(
-                          e.toString().replaceAll('Exception: ', ''),
-                        );
+                      if (date != null) {
+                        setDialogState(() {
+                          selectedDate = date;
+                        });
                       }
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppConstants.primaryColor,
-                      shape: RoundedRectangleBorder(
+                    child: Container(
+                      padding: const EdgeInsets.all(AppConstants.spacingM),
+                      decoration: BoxDecoration(
+                        color: AppConstants.greyLightColor,
                         borderRadius: BorderRadius.circular(
-                          AppConstants.borderRadiusLarge,
+                          AppConstants.borderRadiusSmall,
                         ),
                       ),
-                    ),
-                    child: Text(
-                      AppConstants.modifier,
-                      style: TextStyle(color: AppConstants.whiteColor),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            DateFormatter.formatDatePadded(selectedDate),
+                            style: TextStyle(
+                              fontSize: AppConstants.fontSizeMedium,
+                            ),
+                          ),
+                          const Icon(Icons.calendar_today),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppConstants.spacingL),
+
+                  // Update button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 45,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (nameController.text.isEmpty) {
+                          _showErrorSnackBar(AppConstants.erreurNomTacheVide);
+                          return;
+                        }
+
+                        final updatedTask = Task(
+                          id: task.id,
+                          userId: task.userId,
+                          name: nameController.text,
+                          description: descriptionController.text.isEmpty
+                              ? null
+                              : descriptionController.text,
+                          date: selectedDate,
+                          isCompleted: task.isCompleted,
+                          createdAt: task.createdAt,
+                        );
+
+                        try {
+                          await _taskDao.update(updatedTask);
+                          if (mounted) {
+                            Navigator.pop(context);
+                            _showSuccessSnackBar(AppConstants.tacheModifiee);
+                          }
+                          _loadTasks();
+                        } catch (e) {
+                          _showErrorSnackBar(
+                            e.toString().replaceAll('Exception: ', ''),
+                          );
+                        }
+                      },
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(
+                          AppConstants.primaryColor,
+                        ),
+                        overlayColor: MaterialStateProperty.resolveWith(
+                          (states) =>
+                              AppConstants.primaryColor.withOpacity(0.12),
+                        ),
+                        shape: MaterialStateProperty.all(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppConstants.borderRadiusLarge,
+                            ),
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        AppConstants.modifier,
+                        style: TextStyle(color: AppConstants.whiteColor),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -357,14 +449,44 @@ class _TaskListScreenState extends State<TaskListScreen> {
     );
   }
 
-  /// Delete task
+  /// Delete task with confirmation
   Future<void> _deleteTask(int taskId) async {
-    try {
-      await _taskDao.delete(taskId);
-      _loadTasks();
-    } catch (e) {
-      _showErrorSnackBar(e.toString().replaceAll('Exception: ', ''));
-    }
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmer la suppression'),
+        content: const Text(
+          'Voulez-vous supprimer cette tâche de votre liste?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Annuler',
+              style: TextStyle(color: AppConstants.greyColor),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                await _taskDao.delete(taskId);
+                if (mounted) {
+                  Navigator.pop(context);
+                  _showSuccessSnackBar('Tâche supprimée');
+                }
+                _loadTasks();
+              } catch (e) {
+                _showErrorSnackBar(e.toString().replaceAll('Exception: ', ''));
+              }
+            },
+            child: Text(
+              'Oui',
+              style: TextStyle(color: AppConstants.errorColor),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Toggle task completion
@@ -383,6 +505,16 @@ class _TaskListScreenState extends State<TaskListScreen> {
       SnackBar(
         content: Text(message),
         backgroundColor: AppConstants.errorColor,
+      ),
+    );
+  }
+
+  /// Show success snack bar (green)
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppConstants.successColor,
       ),
     );
   }
@@ -494,10 +626,47 @@ class _TaskListScreenState extends State<TaskListScreen> {
                     ),
                   ),
                   const SizedBox(height: AppConstants.spacingL),
+                  // Filter controls
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ChoiceChip(
+                        label: const Text('Toutes'),
+                        selected: _filter == TaskFilter.all,
+                        onSelected: (_) {
+                          setState(() {
+                            _filter = TaskFilter.all;
+                          });
+                        },
+                      ),
+                      const SizedBox(width: AppConstants.spacingS),
+                      ChoiceChip(
+                        label: const Text('Complétées'),
+                        selected: _filter == TaskFilter.completed,
+                        onSelected: (_) {
+                          setState(() {
+                            _filter = TaskFilter.completed;
+                          });
+                        },
+                      ),
+                      const SizedBox(width: AppConstants.spacingS),
+                      ChoiceChip(
+                        label: const Text('En cours'),
+                        selected: _filter == TaskFilter.pending,
+                        onSelected: (_) {
+                          setState(() {
+                            _filter = TaskFilter.pending;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: AppConstants.spacingL),
 
                   // Task list
                   Expanded(
-                    child: _tasks.isEmpty
+                    child: _filteredTasks.isEmpty
                         ? Center(
                             child: Text(
                               'Aucune tâche pour le moment',
@@ -508,9 +677,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
                             ),
                           )
                         : ListView.builder(
-                            itemCount: _tasks.length,
+                            itemCount: _filteredTasks.length,
                             itemBuilder: (context, index) {
-                              final task = _tasks[index];
+                              final task = _filteredTasks[index];
                               return Container(
                                 margin: const EdgeInsets.only(
                                   bottom: AppConstants.spacingS,
@@ -564,6 +733,20 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                                   : AppConstants.violetColor,
                                             ),
                                           ),
+                                          if (task.description != null &&
+                                              task.description!.isNotEmpty) ...[
+                                            const SizedBox(
+                                              height: AppConstants.spacingXS,
+                                            ),
+                                            Text(
+                                              task.description!,
+                                              style: TextStyle(
+                                                fontSize:
+                                                    AppConstants.fontSizeSmall,
+                                                color: AppConstants.greyColor,
+                                              ),
+                                            ),
+                                          ],
                                         ],
                                       ),
                                     ),

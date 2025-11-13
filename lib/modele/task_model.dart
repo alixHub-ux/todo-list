@@ -3,6 +3,7 @@
 class Task {
   int? id;
   String name;
+  String? description;
   DateTime date;
   bool isCompleted;
   int? userId;
@@ -11,6 +12,7 @@ class Task {
   Task({
     this.id,
     required this.name,
+    this.description,
     required this.date,
     this.isCompleted = false,
     this.userId,
@@ -22,6 +24,7 @@ class Task {
     return {
       'id': id,
       'name': name,
+      'description': description,
       'date': date.toIso8601String(),
       'is_completed': isCompleted ? 1 : 0,
       'user_id': userId,
@@ -34,6 +37,7 @@ class Task {
     return Task(
       id: map['id'],
       name: map['name'],
+      description: map['description'],
       date: DateTime.parse(map['date']),
       isCompleted: map['is_completed'] == 1,
       userId: map['user_id'],
@@ -45,6 +49,7 @@ class Task {
   Task copyWith({
     int? id,
     String? name,
+    String? description,
     DateTime? date,
     bool? isCompleted,
     int? userId,
@@ -53,6 +58,7 @@ class Task {
     return Task(
       id: id ?? this.id,
       name: name ?? this.name,
+      description: description ?? this.description,
       date: date ?? this.date,
       isCompleted: isCompleted ?? this.isCompleted,
       userId: userId ?? this.userId,
@@ -62,6 +68,6 @@ class Task {
 
   @override
   String toString() {
-    return 'Task{id: $id, name: $name, date: $date, isCompleted: $isCompleted, userId: $userId, createdAt: $createdAt}';
+    return 'Task{id: $id, name: $name, description: $description, date: $date, isCompleted: $isCompleted, userId: $userId, createdAt: $createdAt}';
   }
 }

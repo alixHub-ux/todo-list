@@ -144,7 +144,7 @@ class AppConstants {
 
   // ============ DATABASE ============
   static const String databaseName = 'lyst.db';
-  static const int databaseVersion = 1;
+  static const int databaseVersion = 2;
 
   static const String tableUsers = 'users';
   static const String tableTasks = 'tasks';
@@ -159,6 +159,7 @@ class AppConstants {
   static const String columnTaskName = 'name';
   static const String columnTaskDate = 'date';
   static const String columnTaskIsCompleted = 'is_completed';
+  static const String columnTaskDescription = 'description';
   static const String columnTaskCreatedAt = 'created_at';
 
   // ============ VALIDATION ============
